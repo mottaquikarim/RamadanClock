@@ -32,6 +32,15 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.svg">
   <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
 
+  <!-- PostHog Analytics -->
+  <script>
+    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group identify setPersonProperties setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags resetGroups onFeatureFlags addFeatureFlagsHandler onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+    posthog.init('phc_9hdJUk8TS00LkYwgYsN1zL4QCCDW1yrlLIswobBOkW4', {
+      api_host: 'https://us.i.posthog.com',
+      defaults: '2026-01-30'
+    })
+  </script>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1142,8 +1151,10 @@
     function toggleTheme() {
       const isDark = document.documentElement.classList.contains('dark');
       document.documentElement.classList.toggle('dark', !isDark);
-      localStorage.setItem('theme', isDark ? 'light' : 'dark');
+      const newTheme = isDark ? 'light' : 'dark';
+      localStorage.setItem('theme', newTheme);
       updateThemeIcons();
+      posthog.capture('theme_toggled', { theme: newTheme });
     }
 
     // Initialize theme icons on load
@@ -1205,6 +1216,7 @@
           }, 100);
         }
 
+        posthog.capture('cache_cleared');
         preloadAllDays();
         loadPrayerTimes(selectedDate);
       } catch (e) {
@@ -1351,6 +1363,14 @@
       // Choose text based on whether image will be shared
       const shareText = canShareImage ? simpleShareText : fullShareText;
 
+      posthog.capture('day_shared', {
+        ramadan_day: ramadanDay,
+        date: dateStr,
+        has_image: canShareImage,
+        method: navigator.share ? 'native' : 'fallback',
+        location: location
+      });
+
       if (navigator.share) {
         try {
           const shareData = {
@@ -1468,6 +1488,10 @@
         updateUI();
         loadPrayerTimes(selectedDate);
         updateUrlWithDate();
+        posthog.capture('day_navigated', {
+          direction: dir > 0 ? 'next' : 'previous',
+          ramadan_day: getRamadanDay(selectedDate)
+        });
       }
     }
 
@@ -1495,6 +1519,10 @@
       updateUI();
       loadPrayerTimes(selectedDate);
       updateUrlWithDate();
+      posthog.capture('day_selected', {
+        ramadan_day: getRamadanDay(selectedDate),
+        source: 'quick_day_strip'
+      });
     }
 
     // ========== UI UPDATE ==========
@@ -1639,6 +1667,12 @@
         localStorage.setItem('calc-method', newMethod);
       }
 
+      posthog.capture('settings_saved', {
+        calc_method: newMethod,
+        ramadan_start: newStartStr,
+        is_custom_start: newStartStr !== getDateString(DEFAULT_RAMADAN_START)
+      });
+
       // Clear cache since settings changed
       const keys = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -1659,6 +1693,7 @@
       ramadanStartInput.value = getDateString(ramadanStart);
       calcMethodSelect.value = calcMethod;
       settingsModal.classList.remove('hidden');
+      posthog.capture('settings_opened');
     }
 
     function closeSettingsModal() {
@@ -1771,6 +1806,8 @@
     }
 
     async function showMonthView() {
+      posthog.capture('month_view_opened');
+
       // Show loading state
       monthViewBtn.disabled = true;
       monthViewBtn.innerHTML = `
@@ -1808,6 +1845,11 @@
 
         const shareText = `Ramadan 2026 Prayer Times for ${locationDisplayName || 'my location'}`;
 
+        posthog.capture('month_shared', {
+          method: (navigator.share && navigator.canShare && navigator.canShare({ files: [imageFile] })) ? 'native_with_image' : navigator.share ? 'native_text' : 'clipboard',
+          location: locationDisplayName || null
+        });
+
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [imageFile] })) {
           await navigator.share({
             title: 'Ramadan 2026 Calendar',
@@ -1839,18 +1881,21 @@
       // Only show if user hasn't dismissed it
       if (!localStorage.getItem('install-dismissed')) {
         installBanner.classList.remove('hidden');
+        posthog.capture('install_banner_shown');
       }
     });
 
     window.addEventListener('appinstalled', () => {
       installBanner.classList.add('hidden');
       deferredPrompt = null;
+      posthog.capture('pwa_installed');
     });
 
     async function handleInstall() {
       if (!deferredPrompt) return;
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
+      posthog.capture('install_prompt_response', { outcome });
       if (outcome === 'accepted') {
         installBanner.classList.add('hidden');
       }
@@ -1860,11 +1905,13 @@
     function dismissInstallBanner() {
       installBanner.classList.add('hidden');
       localStorage.setItem('install-dismissed', 'true');
+      posthog.capture('install_banner_dismissed');
     }
 
     function dismissIosInstallBanner() {
       iosInstallBanner.classList.add('hidden');
       localStorage.setItem('ios-install-dismissed', 'true');
+      posthog.capture('ios_install_banner_dismissed');
     }
 
     function isIos() {
@@ -1879,6 +1926,7 @@
       // Show iOS banner if: iOS device, not already installed, not dismissed
       if (isIos() && !isInStandaloneMode() && !localStorage.getItem('ios-install-dismissed')) {
         iosInstallBanner.classList.remove('hidden');
+        posthog.capture('ios_install_banner_shown');
       }
     }
 
@@ -1959,6 +2007,19 @@
       await getUserLocation();
       updateUI();
       await loadPrayerTimes(selectedDate);
+
+      posthog.capture('app_loaded', {
+        ramadan_day: getRamadanDay(selectedDate),
+        calc_method: calcMethod,
+        location: locationDisplayName || null,
+        timezone: userTimezone,
+        theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+        is_pwa: isInStandaloneMode(),
+        is_ios: isIos(),
+        is_custom_start: ramadanStart.getTime() !== DEFAULT_RAMADAN_START.getTime(),
+        referrer: document.referrer || null
+      });
+
       preloadAllDays();
 
       // Navigation
