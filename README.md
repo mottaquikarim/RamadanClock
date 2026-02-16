@@ -6,9 +6,7 @@ A progressive web app for viewing Sehri (pre-dawn meal) and Iftaar (sunset meal)
 
 ## The Story
 
-This app was originally built in 2017/2018 for my mother, who needed to check Iftaar times while commuting on the NYC subway. Underground with no cell service, she couldn't look up when to break her fast. The solution? A simple, offline-capable web app that caches prayer times so they're always available — even in the tunnels beneath Manhattan.
-
-What started as a quick utility for one person has grown into a full-featured Ramadan companion app.
+I built the first version of this in 2017/2018 for my mom. She commutes on the NYC subway and would lose cell service underground right when she needed to check Iftaar times. So I threw together a simple offline web app that caches prayer times locally. It's gotten a lot more features since then, but that's still the core idea.
 
 ## Features
 
