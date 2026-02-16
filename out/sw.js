@@ -1,5 +1,7 @@
-const CACHE_NAME = 'ramadan-clock-20260216-14';
+const CACHE_NAME = 'ramadan-clock-20260216-17';
 const STATIC_ASSETS = [
+  '/',
+  '/index.html',
   '/manifest.json',
   '/icons/icon-192.svg',
   '/icons/icon-512.svg'
@@ -34,11 +36,16 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // For HTML pages, always try network first to get latest version
+  // For HTML pages, network first but cache the response for offline
   if (request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
     event.respondWith(
       fetch(request)
         .then((response) => {
+          // Cache the fresh response for offline use
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone);
+          });
           return response;
         })
         .catch(() => {
