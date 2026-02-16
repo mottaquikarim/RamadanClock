@@ -138,16 +138,12 @@ export async function onRequestGet(context) {
     }
 
     if (maghrib) {
-      let iftaarEndH = maghrib.hours;
-      let iftaarEndM = maghrib.minutes + 30;
-      if (iftaarEndM >= 60) { iftaarEndM -= 60; iftaarEndH += 1; }
-
       events.push([
         'BEGIN:VEVENT',
         `UID:${generateUID('iftaar', dateStr)}`,
         `DTSTAMP:${now}`,
         `DTSTART;TZID=${timezone}:${icalDateTime(y, m, d, maghrib.hours, maghrib.minutes)}`,
-        `DTEND;TZID=${timezone}:${icalDateTime(y, m, d, iftaarEndH, iftaarEndM)}`,
+        `DTEND;TZID=${timezone}:${icalDateTime(y, m, d, maghrib.hours, maghrib.minutes + 30)}`,
         `SUMMARY:Iftaar - Day ${dayNum}`,
         `DESCRIPTION:Maghrib at ${times.maghrib}. Break your fast!`,
         'BEGIN:VALARM',
@@ -176,7 +172,7 @@ export async function onRequestGet(context) {
     status: 200,
     headers: {
       'Content-Type': 'text/calendar; charset=utf-8',
-      'Content-Disposition': 'inline; filename="ramadan-2026.ics"',
+      'Content-Disposition': 'attachment; filename="ramadan-2026.ics"',
       'Access-Control-Allow-Origin': '*',
       'Cache-Control': 'public, max-age=86400'
     }
