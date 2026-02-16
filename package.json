@@ -1,0 +1,12 @@
+{
+  "name": "ramadan-clock",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler pages dev out --binding API_BASE=/api",
+    "deploy": "wrangler pages deploy out"
+  },
+  "devDependencies": {
+    "wrangler": "^3"
+  }
+}

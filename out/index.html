@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ramadan Clock - Prayer Times for Ramadan 2026</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Prayer times and fasting schedule for Ramadan 2026. Get accurate Sehri, Iftar, and daily prayer times based on your location.">
+  <meta name="keywords" content="Ramadan, prayer times, sehri, iftar, fajr, maghrib, Islamic calendar, fasting, 2026">
+  <meta name="author" content="Taq and Julianna">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ramadan-clock.pages.dev/">
+  <meta property="og:title" content="Ramadan Clock - Prayer Times for Ramadan 2026">
+  <meta property="og:description" content="Get accurate Sehri, Iftar, and daily prayer times based on your location.">
+  <meta property="og:image" content="https://ramadan-clock.pages.dev/api/share-image">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Ramadan Clock - Prayer Times for Ramadan 2026">
+  <meta name="twitter:description" content="Get accurate Sehri, Iftar, and daily prayer times based on your location.">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0f0f0f" id="theme-color-meta">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ramadan Clock">
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg">
+  <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    // Inline theme detection to prevent flash
+    (function() {
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      document.documentElement.classList.add(theme);
+    })();
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Light mode (default) */
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f5f5;
+      --bg-tertiary: #e5e5e5;
+      --bg-card: #1e2a4a;
+      --text-primary: #111111;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --text-card: #ffffff;
+      --accent: #d4a84b;
+      --border: #e5e5e5;
+    }
+
+    /* Dark mode - deep navy and gold */
+    .dark {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e2a4a;
+      --bg-tertiary: #2d3a5a;
+      --bg-card: #1e2a4a;
+      --text-primary: #ffffff;
+      --text-secondary: #a0aec0;
+      --text-muted: #718096;
+      --text-card: #ffffff;
+      --accent: #d4a84b;
+      --border: #2d3a5a;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .time-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      color: var(--text-card);
+    }
+
+    .nav-arrow {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .nav-arrow:hover {
+      background-color: var(--bg-tertiary);
+    }
+
+    .nav-arrow:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .calendar-day {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 4px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-height: 60px;
+    }
+
+    .calendar-day:hover {
+      background-color: var(--bg-tertiary);
+    }
+
+    .calendar-day.selected {
+      background-color: var(--accent);
+      color: #0f0f0f;
+    }
+
+    .calendar-day.selected .ramadan-day,
+    .calendar-day.selected .month-abbr {
+      color: rgba(0,0,0,0.6);
+    }
+
+    .calendar-day.past {
+      opacity: 0.4;
+    }
+
+    .calendar-day.today {
+      border: 2px solid var(--accent);
+    }
+
+    .calendar-day .date-num {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .calendar-day .month-abbr {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .calendar-day .ramadan-day {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .loading {
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .prayer-row {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .share-btn, .theme-toggle {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .share-btn:hover, .theme-toggle:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .section-title {
+      color: var(--text-muted);
+    }
+
+    .prayer-time {
+      color: var(--text-secondary);
+    }
+
+    .location-text {
+      color: var(--text-secondary);
+    }
+
+    .footer-text {
+      color: var(--text-muted);
+    }
+
+    .footer-link {
+      color: var(--text-secondary);
+    }
+
+    .year-badge {
+      background: var(--accent);
+      color: #0f0f0f;
+    }
+
+    /* Day share capture - hidden until needed */
+    .day-share-capture {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 400px;
+      padding: 20px;
+      border-radius: 16px;
+      font-family: 'Inter', sans-serif;
+      pointer-events: none;
+      visibility: hidden;
+      z-index: 9999;
+    }
+
+    .day-share-capture.visible {
+      visibility: visible;
+    }
+
+    .day-share-capture.theme-dark {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    .day-share-capture.theme-dark .share-header-title { color: #ffffff; }
+    .day-share-capture.theme-dark .share-location { color: #a0aec0; }
+    .day-share-capture.theme-dark .share-date-section { color: #ffffff; }
+    .day-share-capture.theme-dark .share-date-section .text-sm { color: #a0aec0; }
+    .day-share-capture.theme-dark .day-share-time-card { background: #1e2a4a; color: #ffffff; }
+    .day-share-capture.theme-dark .share-prayers { background: #1e2a4a; }
+    .day-share-capture.theme-dark .share-prayer-row { color: #d1d5db; border-bottom-color: #2d3a5a; }
+    .day-share-capture.theme-dark .share-footer { color: #718096; border-top-color: #2d3a5a; }
+    .day-share-capture.theme-dark .share-header-badge { background: #d4a84b; }
+
+    .day-share-capture.theme-light {
+      background: #ffffff;
+      color: #111111;
+    }
+
+    .day-share-capture.theme-light .share-header-title { color: #111111; }
+    .day-share-capture.theme-light .share-location { color: #6b7280; }
+    .day-share-capture.theme-light .share-date-section { color: #111111; }
+    .day-share-capture.theme-light .share-date-section .text-sm { color: #6b7280; }
+    .day-share-capture.theme-light .day-share-time-card { background: rgba(0,0,0,0.05); color: #111111; }
+    .day-share-capture.theme-light .share-prayers { background: rgba(0,0,0,0.05); }
+    .day-share-capture.theme-light .share-prayer-row { color: #374151; border-bottom-color: rgba(0,0,0,0.1); }
+    .day-share-capture.theme-light .share-footer { color: #9ca3af; border-top-color: rgba(0,0,0,0.1); }
+    .day-share-capture.theme-light .share-header-badge { background: #d4a84b; }
+
+    .day-share-time-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .share-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .share-header-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .share-header-badge {
+      background: var(--accent);
+      color: #0f0f0f;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    .share-date-section {
+      text-align: center;
+      margin-bottom: 16px;
+      color: #ffffff;
+    }
+
+    .share-date-section .text-sm {
+      color: #9ca3af !important;
+    }
+
+    .share-prayers {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-top: 12px;
+    }
+
+    .share-prayer-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 14px;
+      color: #d1d5db;
+    }
+
+    .share-prayer-row:not(:last-child) {
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .share-footer {
+      text-align: center;
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .share-location {
+      font-size: 14px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
+    /* Quick day strip */
+    .quick-day-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 50px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .quick-day-btn:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .quick-day-btn.selected {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #0f0f0f;
+    }
+
+    .quick-day-btn .day-num {
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .quick-day-btn .day-month {
+      font-size: 10px;
+      text-transform: uppercase;
+      opacity: 0.6;
+      margin-top: -2px;
+    }
+
+    .quick-day-btn .day-label {
+      font-size: 10px;
+      opacity: 0.7;
+    }
+
+    .quick-day-btn.selected .day-month,
+    .quick-day-btn.selected .day-label {
+      opacity: 0.8;
+    }
+
+    /* Install banner */
+    .install-banner {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+    }
+
+    .install-icon {
+      color: var(--accent);
+    }
+
+    .install-btn {
+      background: var(--accent);
+      color: #0f0f0f;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      flex-shrink: 0;
+    }
+
+    .install-btn:hover {
+      opacity: 0.9;
+    }
+
+    .install-dismiss {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .install-dismiss:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    /* Share button loading state */
+    .share-btn.loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    /* Share month button */
+    .share-month-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+      touch-action: manipulation;
+    }
+
+    .share-month-btn:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+
+    .modal-content {
+      background: var(--bg-primary);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-close {
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .modal-close:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .setting-row {
+      margin-bottom: 20px;
+    }
+
+    .setting-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .setting-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .setting-hint {
+      display: block;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .setting-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    .setting-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: #0f0f0f;
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .save-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* Month share capture - hidden until needed */
+    .month-share-capture {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 600px;
+      padding: 24px;
+      border-radius: 16px;
+      font-family: 'Inter', sans-serif;
+      pointer-events: none;
+      visibility: hidden;
+      z-index: 9999;
+    }
+
+    .month-share-capture.visible {
+      visibility: visible;
+    }
+
+    .month-share-day.today {
+      outline: 2px solid #d4a84b;
+      outline-offset: -2px;
+    }
+
+    /* Month preview styles */
+    .month-preview {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .month-preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .month-preview-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .month-preview-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .month-preview-close:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .month-preview-img {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+
+    .month-share-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      background: var(--accent);
+      color: #0f0f0f;
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .month-share-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* Dark mode capture colors - navy and gold */
+    .month-share-capture.theme-dark {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    .month-share-capture.theme-dark .month-share-title { color: #ffffff; }
+    .month-share-capture.theme-dark .month-share-location { color: #a0aec0; }
+    .month-share-capture.theme-dark .month-share-day { background: #1e2a4a; }
+    .month-share-capture.theme-dark .date-month { color: #ffffff; }
+    .month-share-capture.theme-dark .date-month .month { color: #a0aec0; }
+    .month-share-capture.theme-dark .ramadan-num { color: #d4a84b; }
+    .month-share-capture.theme-dark .time-row { color: #d1d5db; }
+    .month-share-capture.theme-dark .month-share-footer { color: #718096; border-top-color: #2d3a5a; }
+
+    /* Light mode capture colors */
+    .month-share-capture.theme-light {
+      background: #ffffff;
+      color: #111111;
+    }
+
+    .month-share-capture.theme-light .month-share-title { color: #111111; }
+    .month-share-capture.theme-light .month-share-location { color: #6b7280; }
+    .month-share-capture.theme-light .month-share-day { background: rgba(0,0,0,0.05); }
+    .month-share-capture.theme-light .date-month { color: #111111; }
+    .month-share-capture.theme-light .date-month .month { color: #6b7280; }
+    .month-share-capture.theme-light .ramadan-num { color: #b8860b; }
+    .month-share-capture.theme-light .time-row { color: #374151; }
+    .month-share-capture.theme-light .month-share-footer { color: #9ca3af; border-top-color: rgba(0,0,0,0.1); }
+
+    .month-share-header {
+      margin-bottom: 16px;
+    }
+
+    .month-share-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .month-share-location {
+      font-size: 14px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
+    .month-share-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .month-share-day {
+      background: rgba(255,255,255,0.05);
+      border-radius: 6px;
+      padding: 6px 4px;
+      text-align: center;
+      font-size: 10px;
+    }
+
+    .month-share-day .date-month {
+      font-weight: 600;
+      font-size: 11px;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+
+    .month-share-day .date-month .month {
+      font-size: 8px;
+      font-weight: 500;
+      color: #9ca3af;
+      text-transform: uppercase;
+      margin-left: 2px;
+    }
+
+    .month-share-day .ramadan-num {
+      color: #fbbf24;
+      font-size: 8px;
+      margin: 1px 0;
+    }
+
+    .month-share-day .time-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      font-size: 8px;
+      color: #d1d5db;
+    }
+
+    .month-share-day .time-icon {
+      width: 8px;
+      height: 8px;
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+
+    .month-share-footer {
+      text-align: center;
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="max-w-md mx-auto px-4 py-6">
+    <!-- Header -->
+    <header class="flex items-center justify-between mb-6">
+      <h1 class="text-3xl font-bold">
+        Ramadan <span class="font-normal" style="color: var(--text-secondary)">رَمَضَان</span>
+      </h1>
+      <div class="flex items-center gap-2">
+        <button id="settings-toggle" class="theme-toggle !p-2" aria-label="Settings">
+          <!-- Heroicons: cog-6-tooth -->
+          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+          </svg>
+        </button>
+        <button id="theme-toggle" class="theme-toggle !p-2" aria-label="Toggle theme">
+          <!-- Sun icon (shown in dark mode) -->
+          <svg id="sun-icon" class="w-5 h-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/>
+          </svg>
+          <!-- Moon icon (shown in light mode) -->
+          <svg id="moon-icon" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .162.819A8.97 8.97 0 0 0 9 6a9 9 0 0 0 9 9 8.97 8.97 0 0 0 3.463-.69.75.75 0 0 1 .981.98 10.503 10.503 0 0 1-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 0 1 .818.162Z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+        <span class="year-badge text-sm font-medium px-3 py-1 rounded-full">2026</span>
+      </div>
+    </header>
+
+    <!-- Location -->
+    <div class="flex items-center justify-between text-sm location-text mb-4">
+      <span id="location-text">Detecting location...</span>
+      <button id="month-view-btn" class="share-month-btn" aria-label="View full month">
+        <!-- Heroicons: calendar -->
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+        </svg>
+        <span>Month View</span>
+      </button>
+    </div>
+
+    <!-- Month Preview (shown after generating) -->
+    <div id="month-preview" class="month-preview hidden">
+      <div class="month-preview-header">
+        <span class="month-preview-title">Ramadan 2026 Calendar</span>
+        <button id="month-preview-close" class="month-preview-close" aria-label="Close preview">
+          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <img id="month-preview-img" class="month-preview-img" alt="Ramadan 2026 Calendar">
+      <button id="month-share-btn" class="month-share-btn">
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"/>
+        </svg>
+        Tap to Share
+      </button>
+    </div>
+
+    <!-- Install Banner (Android/Desktop) -->
+    <div id="install-banner" class="install-banner hidden">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="install-icon">
+            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/>
+            </svg>
+          </div>
+          <div>
+            <div class="font-medium text-sm" style="color: var(--text-primary)">Add to Home Screen</div>
+            <div class="text-xs" style="color: var(--text-secondary)">Quick access to prayer times</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="install-btn" class="install-btn">Install</button>
+          <button id="install-dismiss" class="install-dismiss" aria-label="Dismiss">
+            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Install Banner (iOS) -->
+    <div id="ios-install-banner" class="install-banner hidden">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="install-icon">
+            <!-- Safari share icon -->
+            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15"/>
+            </svg>
+          </div>
+          <div>
+            <div class="font-medium text-sm" style="color: var(--text-primary)">Add to Home Screen</div>
+            <div class="text-xs" style="color: var(--text-secondary)">Tap <strong>Share</strong> then <strong>Add to Home Screen</strong></div>
+          </div>
+        </div>
+        <button id="ios-install-dismiss" class="install-dismiss" aria-label="Dismiss">
+          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Day Strip -->
+    <div id="quick-day-strip" class="flex items-center justify-center gap-2 mb-4 overflow-x-auto"></div>
+
+    <!-- Day Navigation -->
+    <div class="flex items-center justify-between mb-6">
+      <button id="prev-day" class="nav-arrow">
+        <!-- Heroicons: chevron-left -->
+        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/>
+        </svg>
+      </button>
+      <div class="text-center">
+        <div id="current-date" class="text-lg font-semibold">Loading...</div>
+        <div id="ramadan-day" class="text-sm" style="color: var(--text-secondary)"></div>
+      </div>
+      <button id="next-day" class="nav-arrow">
+        <!-- Heroicons: chevron-right -->
+        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Main Time Cards -->
+    <div class="grid grid-cols-3 gap-3 mb-4">
+      <div class="time-card p-4 text-center">
+        <div class="flex items-center justify-center gap-1 mb-2">
+          <!-- Heroicons: moon (solid) -->
+          <svg class="w-4 h-4 opacity-70" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .162.819A8.97 8.97 0 0 0 9 6a9 9 0 0 0 9 9 8.97 8.97 0 0 0 3.463-.69.75.75 0 0 1 .981.98 10.503 10.503 0 0 1-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 0 1 .818.162Z" clip-rule="evenodd"/>
+          </svg>
+          <span class="text-xs uppercase tracking-wide opacity-70">Sehri</span>
+        </div>
+        <div id="sehri-time" class="text-xl font-bold loading">--:--</div>
+      </div>
+      <div class="time-card p-4 text-center">
+        <div class="flex items-center justify-center gap-1 mb-2">
+          <!-- Heroicons: sun (outline) -->
+          <svg class="w-4 h-4 opacity-70" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/>
+          </svg>
+          <span class="text-xs uppercase tracking-wide opacity-70">Sunrise</span>
+        </div>
+        <div id="sunrise-time" class="text-xl font-bold loading">--:--</div>
+      </div>
+      <div class="time-card p-4 text-center">
+        <div class="flex items-center justify-center gap-1 mb-2">
+          <!-- Sunset icon -->
+          <svg class="w-4 h-4 opacity-70" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25M6.364 5.636l1.591 1.591M3 12h2.25m-.386 6.364 1.591-1.591M12 18.75V21m4.773-4.227 1.591 1.591M18.75 12H21m-4.227-4.773 1.591-1.591M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/>
+          </svg>
+          <span class="text-xs uppercase tracking-wide opacity-70">Iftaar</span>
+        </div>
+        <div id="iftaar-time" class="text-xl font-bold loading">--:--</div>
+      </div>
+    </div>
+
+    <!-- Share Button -->
+    <div class="flex justify-center mb-8">
+      <button id="share-btn" class="share-btn">
+        <!-- Heroicons: share -->
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"/>
+        </svg>
+        Share this day
+      </button>
+    </div>
+
+    <!-- Daily Prayers -->
+    <div class="mb-8">
+      <h2 class="text-xs uppercase tracking-wider section-title mb-4">Daily Prayers</h2>
+      <div class="space-y-0">
+        <div class="flex justify-between items-center py-4 prayer-row">
+          <span class="font-medium">Fajr</span>
+          <span id="fajr-time" class="prayer-time loading">--:--</span>
+        </div>
+        <div class="flex justify-between items-center py-4 prayer-row">
+          <span class="font-medium">Zhuhr</span>
+          <span id="dhuhr-time" class="prayer-time loading">--:--</span>
+        </div>
+        <div class="flex justify-between items-center py-4 prayer-row">
+          <span class="font-medium">Asr</span>
+          <span id="asr-time" class="prayer-time loading">--:--</span>
+        </div>
+        <div class="flex justify-between items-center py-4 prayer-row">
+          <span class="font-medium">Maghrib</span>
+          <span id="maghrib-time" class="prayer-time loading">--:--</span>
+        </div>
+        <div class="flex justify-between items-center py-4 prayer-row">
+          <span class="font-medium">Isha</span>
+          <span id="isha-time" class="prayer-time loading">--:--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center text-sm footer-text pt-4" style="border-top: 1px solid var(--border)">
+      <div>Built by Taq and Julianna with 🥯, ☕, and ❤️</div>
+      <button id="clear-cache" class="text-xs footer-link hover:underline mt-2">
+        Clear cache
+      </button>
+    </footer>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="text-lg font-semibold">Settings</h2>
+        <button id="close-settings" class="modal-close" aria-label="Close">
+          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-row">
+          <label class="setting-label" for="ramadan-start-input">
+            Ramadan Start Date
+            <span class="setting-hint">Adjust if your community observes a different start date</span>
+          </label>
+          <input type="date" id="ramadan-start-input" class="setting-input">
+        </div>
+        <div class="setting-row">
+          <label class="setting-label" for="calc-method-select">
+            Calculation Method
+            <span class="setting-hint">Different organizations use different calculation methods</span>
+          </label>
+          <select id="calc-method-select" class="setting-input">
+            <option value="ISNA">ISNA (North America)</option>
+            <option value="MWL">Muslim World League</option>
+            <option value="Egypt">Egyptian General Authority</option>
+            <option value="Makkah">Umm Al-Qura (Makkah)</option>
+            <option value="Karachi">University of Karachi</option>
+            <option value="Tehran">Institute of Geophysics, Tehran</option>
+            <option value="Jafari">Shia Ithna-Ashari (Jafari)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="save-settings" class="save-btn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Month Share Capture (hidden via CSS, used for image generation) -->
+  <div id="month-share-capture" class="month-share-capture">
+    <div class="month-share-header">
+      <div>
+        <div class="month-share-title">Ramadan <span style="opacity: 0.7">رَمَضَان</span> 2026</div>
+        <div id="month-share-location" class="month-share-location"></div>
+      </div>
+    </div>
+    <div id="month-share-grid" class="month-share-grid"></div>
+    <div class="month-share-footer">ramadan-clock.pages.dev</div>
+  </div>
+
+  <!-- Day Share Capture (hidden via CSS, used for image generation) -->
+  <div id="day-share-capture" class="day-share-capture">
+    <div class="share-header">
+      <div>
+        <div class="share-header-title">Ramadan <span style="opacity: 0.7">رَمَضَان</span></div>
+        <div id="day-share-location" class="share-location"></div>
+      </div>
+      <div class="share-header-badge">2026</div>
+    </div>
+    <div class="share-date-section">
+      <div id="day-share-date" class="text-lg font-semibold"></div>
+      <div id="day-share-ramadan-day" class="text-sm"></div>
+    </div>
+    <div id="day-share-cards" class="grid grid-cols-3 gap-3" style="margin-bottom: 12px;"></div>
+    <div id="day-share-prayers" class="share-prayers"></div>
+    <div class="share-footer">ramadan-clock.pages.dev</div>
+  </div>
+
+  <script>
+    // ========== CONFIGURATION ==========
+    const BUILD_VERSION = '20260216-14'; // Update on each deploy
+    const DEFAULT_RAMADAN_START = new Date(2026, 1, 18); // Feb 18 - first full day of fasting
+    const RAMADAN_DAYS = 31;
+    const CACHE_VERSION = 'v2';
+    const CALC_METHODS = ['ISNA', 'MWL', 'Egypt', 'Makkah', 'Karachi', 'Tehran', 'Jafari'];
+
+    // ========== STATE ==========
+    let ramadanStart = new Date(DEFAULT_RAMADAN_START);
+    let ramadanEnd = new Date(ramadanStart);
+    ramadanEnd.setDate(ramadanEnd.getDate() + RAMADAN_DAYS - 1);
+    let calcMethod = 'ISNA';
+    let selectedDate = null;
+    let userLocation = { lat: 40.7128, lng: -74.0060 };
+    let userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    let locationDisplayName = null;
+    let preloadInProgress = false;
+    let currentTimes = null;
+    let allTimesCache = {}; // In-memory cache for month share
+
+    // ========== DOM ELEMENTS ==========
+    const locationText = document.getElementById('location-text');
+    const currentDateEl = document.getElementById('current-date');
+    const ramadanDayEl = document.getElementById('ramadan-day');
+    const prevDayBtn = document.getElementById('prev-day');
+    const nextDayBtn = document.getElementById('next-day');
+    const clearCacheBtn = document.getElementById('clear-cache');
+    const shareBtn = document.getElementById('share-btn');
+    const themeToggle = document.getElementById('theme-toggle');
+    const sunIcon = document.getElementById('sun-icon');
+    const moonIcon = document.getElementById('moon-icon');
+
+    const timeElements = {
+      sehri: document.getElementById('sehri-time'),
+      sunrise: document.getElementById('sunrise-time'),
+      iftaar: document.getElementById('iftaar-time'),
+      fajr: document.getElementById('fajr-time'),
+      dhuhr: document.getElementById('dhuhr-time'),
+      asr: document.getElementById('asr-time'),
+      maghrib: document.getElementById('maghrib-time'),
+      isha: document.getElementById('isha-time')
+    };
+
+    // Day share capture element (always off-screen)
+    const dayShareCapture = document.getElementById('day-share-capture');
+    const dayShareLocation = document.getElementById('day-share-location');
+    const dayShareDate = document.getElementById('day-share-date');
+    const dayShareRamadanDay = document.getElementById('day-share-ramadan-day');
+    const dayShareCards = document.getElementById('day-share-cards');
+    const daySharePrayers = document.getElementById('day-share-prayers');
+    const quickDayStrip = document.getElementById('quick-day-strip');
+    const installBanner = document.getElementById('install-banner');
+    const installBtn = document.getElementById('install-btn');
+
+    // Settings modal elements
+    const settingsToggle = document.getElementById('settings-toggle');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettings = document.getElementById('close-settings');
+    const ramadanStartInput = document.getElementById('ramadan-start-input');
+    const calcMethodSelect = document.getElementById('calc-method-select');
+    const saveSettingsBtn = document.getElementById('save-settings');
+
+    // Month view/share elements
+    const monthViewBtn = document.getElementById('month-view-btn');
+    const monthPreview = document.getElementById('month-preview');
+    const monthPreviewClose = document.getElementById('month-preview-close');
+    const monthPreviewImg = document.getElementById('month-preview-img');
+    const monthShareBtn = document.getElementById('month-share-btn');
+    const monthShareCapture = document.getElementById('month-share-capture');
+    const monthShareLocation = document.getElementById('month-share-location');
+    const monthShareGrid = document.getElementById('month-share-grid');
+
+    // PWA install prompt
+    let deferredPrompt = null;
+    const installDismiss = document.getElementById('install-dismiss');
+    const iosInstallBanner = document.getElementById('ios-install-banner');
+    const iosInstallDismiss = document.getElementById('ios-install-dismiss');
+
+    // ========== THEME ==========
+    function updateThemeIcons() {
+      const isDark = document.documentElement.classList.contains('dark');
+      sunIcon.classList.toggle('hidden', !isDark);
+      moonIcon.classList.toggle('hidden', isDark);
+      document.getElementById('theme-color-meta').content = isDark ? '#0f172a' : '#ffffff';
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      document.documentElement.classList.toggle('dark', !isDark);
+      localStorage.setItem('theme', isDark ? 'light' : 'dark');
+      updateThemeIcons();
+    }
+
+    // Initialize theme icons on load
+    updateThemeIcons();
+
+    // ========== SERVICE WORKER ==========
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('SW registered'))
+        .catch(err => console.log('SW registration failed:', err));
+    }
+
+    // ========== CACHE FUNCTIONS ==========
+    function getCacheKey(date) {
+      const dateStr = date.toISOString().split('T')[0];
+      const locKey = `${userLocation.lat.toFixed(2)},${userLocation.lng.toFixed(2)}`;
+      return `ramadan-clock-${CACHE_VERSION}-${calcMethod}-${dateStr}-${locKey}`;
+    }
+
+    function getFromCache(date) {
+      try {
+        const key = getCacheKey(date);
+        const cached = localStorage.getItem(key);
+        return cached ? JSON.parse(cached) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function saveToCache(date, times) {
+      try {
+        localStorage.setItem(getCacheKey(date), JSON.stringify(times));
+      } catch (e) {}
+    }
+
+    async function clearCache() {
+      try {
+        // Clear localStorage cache
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key?.startsWith('ramadan-clock-')) keys.push(key);
+        }
+        keys.forEach(k => localStorage.removeItem(k));
+
+        // Clear service worker caches
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+
+        // Unregister and re-register service worker
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map(reg => reg.unregister()));
+          // Re-register after a short delay
+          setTimeout(() => {
+            navigator.serviceWorker.register('/sw.js');
+          }, 100);
+        }
+
+        preloadAllDays();
+        loadPrayerTimes(selectedDate);
+      } catch (e) {
+        console.error('Cache clear error:', e);
+      }
+    }
+
+    // ========== LOCATION FUNCTIONS ==========
+    async function getLocationFromCF() {
+      try {
+        const response = await fetch('/api/location');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.displayName) locationDisplayName = data.displayName;
+          if (data.latitude && data.longitude) {
+            return { lat: parseFloat(data.latitude), lng: parseFloat(data.longitude) };
+          }
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    async function getUserLocation() {
+      const cfLocation = await getLocationFromCF();
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+          updateLocationDisplay();
+          resolve();
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            userLocation.lat = pos.coords.latitude;
+            userLocation.lng = pos.coords.longitude;
+            updateLocationDisplay();
+            resolve();
+          },
+          () => {
+            if (cfLocation) {
+              userLocation.lat = cfLocation.lat;
+              userLocation.lng = cfLocation.lng;
+            }
+            updateLocationDisplay();
+            resolve();
+          },
+          { timeout: 5000 }
+        );
+      });
+    }
+
+    function updateLocationDisplay() {
+      locationText.textContent = locationDisplayName || `${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}`;
+    }
+
+    // ========== DATE FUNCTIONS ==========
+    function formatDate(date) {
+      return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    function formatShortMonth(date) {
+      return date.toLocaleDateString('en-US', { month: 'short' });
+    }
+
+    function getRamadanDay(date) {
+      const start = new Date(ramadanStart); start.setHours(0,0,0,0);
+      const target = new Date(date); target.setHours(0,0,0,0);
+      return Math.floor((target - start) / 86400000) + 1;
+    }
+
+    function isWithinRamadan(date) {
+      const d = new Date(date); d.setHours(0,0,0,0);
+      const s = new Date(ramadanStart); s.setHours(0,0,0,0);
+      const e = new Date(ramadanEnd); e.setHours(0,0,0,0);
+      return d >= s && d <= e;
+    }
+
+    function isPastDate(date) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const d = new Date(date); d.setHours(0,0,0,0);
+      return d < today;
+    }
+
+    function isToday(date) {
+      const t = new Date();
+      return date.getFullYear() === t.getFullYear() && date.getMonth() === t.getMonth() && date.getDate() === t.getDate();
+    }
+
+    function isSameDate(d1, d2) {
+      return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
+    }
+
+    // ========== SHARING ==========
+    function getDateString(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    async function shareDay() {
+      const dateStr = getDateString(selectedDate);
+      const isCustomStart = ramadanStart.getTime() !== DEFAULT_RAMADAN_START.getTime();
+      let shareUrl = `${window.location.origin}/?date=${dateStr}`;
+      if (isCustomStart) {
+        shareUrl += `&start=${getDateString(ramadanStart)}`;
+      }
+      const ramadanDay = getRamadanDay(selectedDate);
+      const location = locationDisplayName || 'your location';
+
+      // Full text for when no image
+      const fullShareText = `Ramadan 2026 - Day ${ramadanDay}\nSehri: ${currentTimes?.fajr || '--'}\nIftaar: ${currentTimes?.maghrib || '--'}`;
+      // Simple text for when image is attached (image has all the details)
+      const simpleShareText = `Ramadan 2026 - Day ${ramadanDay} prayer times for ${location}`;
+
+      // Show loading state
+      shareBtn.classList.add('loading');
+      shareBtn.innerHTML = `
+        <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Generating...
+      `;
+
+      // Try to generate image
+      let imageFile = null;
+      let canShareImage = false;
+      try {
+        imageFile = await generateShareImage();
+        canShareImage = imageFile && navigator.canShare && navigator.canShare({ files: [imageFile] });
+      } catch (e) {
+        console.log('Image generation failed, falling back to text:', e);
+      }
+
+      // Reset button
+      shareBtn.classList.remove('loading');
+      shareBtn.innerHTML = `
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"/>
+        </svg>
+        Share this day
+      `;
+
+      // Choose text based on whether image will be shared
+      const shareText = canShareImage ? simpleShareText : fullShareText;
+
+      if (navigator.share) {
+        try {
+          const shareData = {
+            title: `Ramadan Day ${ramadanDay}`,
+            text: shareText,
+            url: shareUrl
+          };
+
+          // Add image if available and supported
+          if (canShareImage) {
+            shareData.files = [imageFile];
+          }
+
+          await navigator.share(shareData);
+        } catch (err) {
+          if (err.name !== 'AbortError') fallbackShare(shareUrl, fullShareText);
+        }
+      } else {
+        fallbackShare(shareUrl, fullShareText);
+      }
+    }
+
+    async function generateShareImage() {
+      const day = getRamadanDay(selectedDate);
+      const isDark = document.documentElement.classList.contains('dark');
+
+      // Set theme class
+      dayShareCapture.classList.remove('theme-dark', 'theme-light');
+      dayShareCapture.classList.add(isDark ? 'theme-dark' : 'theme-light');
+
+      // Populate the capture element
+      dayShareLocation.textContent = locationDisplayName || '';
+      dayShareDate.textContent = formatDate(selectedDate);
+      dayShareRamadanDay.textContent = (day >= 1 && day <= RAMADAN_DAYS) ? `Day ${day} of ${RAMADAN_DAYS}` : '';
+
+      // Build time cards
+      const moonSvg = `<svg style="width:16px;height:16px;opacity:0.7" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .162.819A8.97 8.97 0 0 0 9 6a9 9 0 0 0 9 9 8.97 8.97 0 0 0 3.463-.69.75.75 0 0 1 .981.98 10.503 10.503 0 0 1-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 0 1 .818.162Z" clip-rule="evenodd"/></svg>`;
+      const sunSvg = `<svg style="width:16px;height:16px;opacity:0.7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>`;
+      const sunsetSvg = `<svg style="width:16px;height:16px;opacity:0.7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25M6.364 5.636l1.591 1.591M3 12h2.25m-.386 6.364 1.591-1.591M12 18.75V21m4.773-4.227 1.591 1.591M18.75 12H21m-4.227-4.773 1.591-1.591M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>`;
+
+      dayShareCards.innerHTML = `
+        <div class="day-share-time-card">
+          <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:8px;">
+            ${moonSvg}
+            <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;opacity:0.7">Sehri</span>
+          </div>
+          <div style="font-size:20px;font-weight:700">${currentTimes?.fajr || '--:--'}</div>
+        </div>
+        <div class="day-share-time-card">
+          <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:8px;">
+            ${sunSvg}
+            <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;opacity:0.7">Sunrise</span>
+          </div>
+          <div style="font-size:20px;font-weight:700">${currentTimes?.sunrise || '--:--'}</div>
+        </div>
+        <div class="day-share-time-card">
+          <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:8px;">
+            ${sunsetSvg}
+            <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;opacity:0.7">Iftaar</span>
+          </div>
+          <div style="font-size:20px;font-weight:700">${currentTimes?.maghrib || '--:--'}</div>
+        </div>
+      `;
+
+      // Build prayer times list
+      daySharePrayers.innerHTML = `
+        <div class="share-prayer-row"><span>Fajr</span><span>${currentTimes?.fajr || '--:--'}</span></div>
+        <div class="share-prayer-row"><span>Zhuhr</span><span>${currentTimes?.dhuhr || '--:--'}</span></div>
+        <div class="share-prayer-row"><span>Asr</span><span>${currentTimes?.asr || '--:--'}</span></div>
+        <div class="share-prayer-row"><span>Maghrib</span><span>${currentTimes?.maghrib || '--:--'}</span></div>
+        <div class="share-prayer-row"><span>Isha</span><span>${currentTimes?.isha || '--:--'}</span></div>
+      `;
+
+      // Show element for capture (will flash briefly)
+      dayShareCapture.classList.add('visible');
+
+      // Wait for render
+      await new Promise(r => setTimeout(r, 100));
+
+      try {
+        const blob = await htmlToImage.toBlob(dayShareCapture, {
+          backgroundColor: isDark ? '#0f172a' : '#ffffff',
+          pixelRatio: 2
+        });
+
+        // Hide immediately after capture
+        dayShareCapture.classList.remove('visible');
+
+        if (blob) {
+          return new File([blob], `ramadan-day-${day}.png`, { type: 'image/png' });
+        }
+      } catch (e) {
+        dayShareCapture.classList.remove('visible');
+        console.error('Day share image generation error:', e);
+        throw e;
+      }
+
+      return null;
+    }
+
+    function fallbackShare(url, text) {
+      navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
+        alert('Link copied to clipboard!');
+      }).catch(() => {
+        prompt('Copy this link:', url);
+      });
+    }
+
+    // ========== NAVIGATION ==========
+    function navigateDay(dir) {
+      const newDate = new Date(selectedDate);
+      newDate.setDate(newDate.getDate() + dir);
+      if (isWithinRamadan(newDate)) {
+        selectedDate = newDate;
+        updateUI();
+        loadPrayerTimes(selectedDate);
+        updateUrlWithDate();
+      }
+    }
+
+    function updateNavButtons() {
+      const prev = new Date(selectedDate); prev.setDate(prev.getDate() - 1);
+      const next = new Date(selectedDate); next.setDate(next.getDate() + 1);
+      prevDayBtn.disabled = !isWithinRamadan(prev);
+      nextDayBtn.disabled = !isWithinRamadan(next);
+    }
+
+    function updateUrlWithDate() {
+      const url = new URL(window.location);
+      url.searchParams.set('date', getDateString(selectedDate));
+      const isCustomStart = ramadanStart.getTime() !== DEFAULT_RAMADAN_START.getTime();
+      if (isCustomStart) {
+        url.searchParams.set('start', getDateString(ramadanStart));
+      } else {
+        url.searchParams.delete('start');
+      }
+      window.history.replaceState({}, '', url);
+    }
+
+    function selectDate(date) {
+      selectedDate = new Date(date);
+      updateUI();
+      loadPrayerTimes(selectedDate);
+      updateUrlWithDate();
+    }
+
+    // ========== UI UPDATE ==========
+    function updateUI() {
+      currentDateEl.textContent = formatDate(selectedDate);
+      const day = getRamadanDay(selectedDate);
+      ramadanDayEl.textContent = (day >= 1 && day <= RAMADAN_DAYS) ? `Day ${day} of ${RAMADAN_DAYS}` : '';
+      updateNavButtons();
+      renderQuickDayStrip();
+    }
+
+    // ========== PRAYER TIMES ==========
+    async function fetchPrayerTimes(date) {
+      const dateStr = getDateString(date);
+      const res = await fetch(`/api/prayer-times?lat=${userLocation.lat}&lng=${userLocation.lng}&date=${dateStr}&timezone=${encodeURIComponent(userTimezone)}&method=${calcMethod}&format=12h`);
+      if (!res.ok) throw new Error('Failed');
+      return (await res.json()).times;
+    }
+
+    async function loadPrayerTimes(date) {
+      const cached = getFromCache(date);
+      if (cached) { currentTimes = cached; displayPrayerTimes(cached); return; }
+      setLoadingState(true);
+      try {
+        const times = await fetchPrayerTimes(date);
+        saveToCache(date, times);
+        currentTimes = times;
+        displayPrayerTimes(times);
+      } catch (e) {
+        displayError();
+      }
+    }
+
+    async function preloadAllDays() {
+      if (preloadInProgress) return;
+      preloadInProgress = true;
+      for (let i = 0; i < RAMADAN_DAYS; i++) {
+        const date = new Date(ramadanStart);
+        date.setDate(date.getDate() + i);
+        if (getFromCache(date)) continue;
+        try {
+          const times = await fetchPrayerTimes(date);
+          saveToCache(date, times);
+          await new Promise(r => setTimeout(r, 100));
+        } catch (e) {}
+      }
+      preloadInProgress = false;
+    }
+
+    function displayPrayerTimes(times) {
+      setLoadingState(false);
+      timeElements.sehri.textContent = times.fajr;
+      timeElements.sunrise.textContent = times.sunrise;
+      timeElements.iftaar.textContent = times.maghrib;
+      timeElements.fajr.textContent = times.fajr;
+      timeElements.dhuhr.textContent = times.dhuhr;
+      timeElements.asr.textContent = times.asr;
+      timeElements.maghrib.textContent = times.maghrib;
+      timeElements.isha.textContent = times.isha;
+    }
+
+    function displayError() {
+      setLoadingState(false);
+      Object.values(timeElements).forEach(el => el.textContent = 'Error');
+    }
+
+    function setLoadingState(loading) {
+      Object.values(timeElements).forEach(el => {
+        el.classList.toggle('loading', loading);
+        if (loading) el.textContent = '--:--';
+      });
+    }
+
+    // ========== QUICK DAY STRIP ==========
+    function renderQuickDayStrip() {
+      quickDayStrip.innerHTML = '';
+      const currentRamadanDay = getRamadanDay(selectedDate);
+
+      // Show 2 days before and 2 days after (5 total)
+      for (let offset = -2; offset <= 2; offset++) {
+        const dayNum = currentRamadanDay + offset;
+        if (dayNum < 1 || dayNum > RAMADAN_DAYS) continue;
+
+        const date = new Date(ramadanStart);
+        date.setDate(date.getDate() + dayNum - 1);
+
+        const btn = document.createElement('button');
+        btn.className = 'quick-day-btn';
+        if (offset === 0) btn.classList.add('selected');
+
+        const monthAbbr = date.toLocaleDateString('en-US', { month: 'short' });
+
+        const dayNumEl = document.createElement('div');
+        dayNumEl.className = 'day-num';
+        dayNumEl.textContent = date.getDate();
+
+        const monthEl = document.createElement('div');
+        monthEl.className = 'day-month';
+        monthEl.textContent = monthAbbr;
+
+        const dayLabel = document.createElement('div');
+        dayLabel.className = 'day-label';
+        dayLabel.textContent = `Day ${dayNum}`;
+
+        btn.append(dayNumEl, monthEl, dayLabel);
+        btn.addEventListener('click', () => selectDate(date));
+        quickDayStrip.appendChild(btn);
+      }
+    }
+
+    // ========== SETTINGS ==========
+    function loadSettings() {
+      try {
+        const savedStart = localStorage.getItem('ramadan-start');
+        if (savedStart) {
+          const [y, m, d] = savedStart.split('-').map(Number);
+          ramadanStart = new Date(y, m - 1, d);
+          ramadanEnd = new Date(ramadanStart);
+          ramadanEnd.setDate(ramadanEnd.getDate() + RAMADAN_DAYS - 1);
+        }
+        const savedMethod = localStorage.getItem('calc-method');
+        if (savedMethod && CALC_METHODS.includes(savedMethod)) {
+          calcMethod = savedMethod;
+        }
+      } catch (e) {}
+    }
+
+    function saveSettings() {
+      const newStartStr = ramadanStartInput.value;
+      const newMethod = calcMethodSelect.value;
+
+      if (newStartStr) {
+        const [y, m, d] = newStartStr.split('-').map(Number);
+        ramadanStart = new Date(y, m - 1, d);
+        ramadanEnd = new Date(ramadanStart);
+        ramadanEnd.setDate(ramadanEnd.getDate() + RAMADAN_DAYS - 1);
+        localStorage.setItem('ramadan-start', newStartStr);
+      }
+
+      if (newMethod && CALC_METHODS.includes(newMethod)) {
+        calcMethod = newMethod;
+        localStorage.setItem('calc-method', newMethod);
+      }
+
+      // Clear cache since settings changed
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith('ramadan-clock-v')) keys.push(key);
+      }
+      keys.forEach(k => localStorage.removeItem(k));
+
+      // Refresh UI
+      closeSettingsModal();
+      updateUI();
+      loadPrayerTimes(selectedDate);
+      preloadAllDays();
+    }
+
+    function openSettingsModal() {
+      // Set current values
+      ramadanStartInput.value = getDateString(ramadanStart);
+      calcMethodSelect.value = calcMethod;
+      settingsModal.classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      settingsModal.classList.add('hidden');
+    }
+
+    // ========== SHARE MONTH ==========
+    // SVG icon paths for month share
+    const MOON_ICON_SVG = `<svg class="time-icon" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .162.819A8.97 8.97 0 0 0 9 6a9 9 0 0 0 9 9 8.97 8.97 0 0 0 3.463-.69.75.75 0 0 1 .981.98 10.503 10.503 0 0 1-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 0 1 .818.162Z" clip-rule="evenodd"/></svg>`;
+    const SUN_ICON_SVG = `<svg class="time-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>`;
+
+    // Month share state
+    let monthImageBlob = null;
+
+    function closeMonthPreview() {
+      monthPreview.classList.add('hidden');
+      monthImageBlob = null;
+    }
+
+    function resetMonthViewButton() {
+      monthViewBtn.disabled = false;
+      monthViewBtn.innerHTML = `
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+        </svg>
+        <span>Month View</span>
+      `;
+    }
+
+    async function prepareMonthImage() {
+      // Fetch any missing prayer times
+      for (let i = 0; i < RAMADAN_DAYS; i++) {
+        const date = new Date(ramadanStart);
+        date.setDate(date.getDate() + i);
+        if (!getFromCache(date)) {
+          try {
+            const times = await fetchPrayerTimes(date);
+            saveToCache(date, times);
+          } catch (e) {
+            console.error('Failed to fetch times for day', i + 1);
+          }
+        }
+      }
+
+      // Collect all prayer times
+      const allTimes = [];
+      for (let i = 0; i < RAMADAN_DAYS; i++) {
+        const date = new Date(ramadanStart);
+        date.setDate(date.getDate() + i);
+        const times = getFromCache(date);
+        if (!times) return false;
+        allTimes.push({ date, times, dayNum: i + 1 });
+      }
+
+      // Build the grid
+      monthShareLocation.textContent = locationDisplayName || '';
+      monthShareGrid.innerHTML = '';
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      for (const { date, times, dayNum } of allTimes) {
+        const cell = document.createElement('div');
+        cell.className = 'month-share-day';
+
+        // Check if this is today
+        const cellDate = new Date(date);
+        cellDate.setHours(0, 0, 0, 0);
+        if (cellDate.getTime() === today.getTime()) {
+          cell.classList.add('today');
+        }
+
+        const monthAbbr = date.toLocaleDateString('en-US', { month: 'short' });
+
+        cell.innerHTML = `
+          <div class="date-month">${date.getDate()}<span class="month">${monthAbbr}</span></div>
+          <div class="ramadan-num">Day ${dayNum}</div>
+          <div class="time-row">${MOON_ICON_SVG}<span>${times.fajr}</span></div>
+          <div class="time-row">${SUN_ICON_SVG}<span>${times.maghrib}</span></div>
+        `;
+        monthShareGrid.appendChild(cell);
+      }
+
+      // Set theme class based on current mode
+      const isDark = document.documentElement.classList.contains('dark');
+      monthShareCapture.classList.remove('theme-dark', 'theme-light');
+      monthShareCapture.classList.add(isDark ? 'theme-dark' : 'theme-light');
+
+      // Show element for capture (will flash briefly)
+      monthShareCapture.classList.add('visible');
+
+      // Wait for render
+      await new Promise(r => setTimeout(r, 100));
+
+      try {
+        monthImageBlob = await htmlToImage.toBlob(monthShareCapture, {
+          backgroundColor: isDark ? '#0f172a' : '#ffffff',
+          pixelRatio: 2
+        });
+
+        // Hide immediately after capture
+        monthShareCapture.classList.remove('visible');
+      } catch (e) {
+        monthShareCapture.classList.remove('visible');
+        console.error('Image generation error:', e);
+        return false;
+      }
+
+      return !!monthImageBlob;
+    }
+
+    async function showMonthView() {
+      // Show loading state
+      monthViewBtn.disabled = true;
+      monthViewBtn.innerHTML = `
+        <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <span>Loading...</span>
+      `;
+
+      const success = await prepareMonthImage();
+      resetMonthViewButton();
+
+      if (success && monthImageBlob) {
+        // Show preview with the generated image
+        const imageUrl = URL.createObjectURL(monthImageBlob);
+        monthPreviewImg.src = imageUrl;
+        monthPreview.classList.remove('hidden');
+      } else {
+        alert('Failed to generate calendar. Please try again.');
+      }
+    }
+
+    async function shareMonthImage() {
+      if (!monthImageBlob) return;
+
+      try {
+        const imageFile = new File([monthImageBlob], 'ramadan-2026-calendar.png', { type: 'image/png' });
+
+        let shareUrl = `${window.location.origin}/`;
+        const isCustomStart = ramadanStart.getTime() !== DEFAULT_RAMADAN_START.getTime();
+        if (isCustomStart) {
+          shareUrl += `?start=${getDateString(ramadanStart)}`;
+        }
+
+        const shareText = `Ramadan 2026 Prayer Times for ${locationDisplayName || 'my location'}`;
+
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [imageFile] })) {
+          await navigator.share({
+            title: 'Ramadan 2026 Calendar',
+            text: shareText,
+            url: shareUrl,
+            files: [imageFile]
+          });
+        } else if (navigator.share) {
+          await navigator.share({
+            title: 'Ramadan 2026 Calendar',
+            text: shareText,
+            url: shareUrl
+          });
+        } else {
+          await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+          alert('Link copied to clipboard!');
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError') {
+          console.error('Share month error:', e);
+        }
+      }
+    }
+
+    // ========== PWA INSTALL ==========
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Only show if user hasn't dismissed it
+      if (!localStorage.getItem('install-dismissed')) {
+        installBanner.classList.remove('hidden');
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      installBanner.classList.add('hidden');
+      deferredPrompt = null;
+    });
+
+    async function handleInstall() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        installBanner.classList.add('hidden');
+      }
+      deferredPrompt = null;
+    }
+
+    function dismissInstallBanner() {
+      installBanner.classList.add('hidden');
+      localStorage.setItem('install-dismissed', 'true');
+    }
+
+    function dismissIosInstallBanner() {
+      iosInstallBanner.classList.add('hidden');
+      localStorage.setItem('ios-install-dismissed', 'true');
+    }
+
+    function isIos() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    }
+
+    function isInStandaloneMode() {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+
+    function showIosInstallBanner() {
+      // Show iOS banner if: iOS device, not already installed, not dismissed
+      if (isIos() && !isInStandaloneMode() && !localStorage.getItem('ios-install-dismissed')) {
+        iosInstallBanner.classList.remove('hidden');
+      }
+    }
+
+    // ========== INIT ==========
+    async function init() {
+      // Check if build version changed - auto-clear cache on new deploy
+      const lastBuild = localStorage.getItem('build-version');
+      if (lastBuild !== BUILD_VERSION) {
+        console.log(`New build detected: ${lastBuild} -> ${BUILD_VERSION}, clearing caches...`);
+        // Clear all localStorage except settings
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key?.startsWith('ramadan-clock-v') || key === 'build-version') {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+
+        // Clear service worker caches
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+
+        // Unregister old service workers
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map(reg => reg.unregister()));
+        }
+
+        localStorage.setItem('build-version', BUILD_VERSION);
+        // Reload to get fresh content
+        window.location.reload();
+        return;
+      }
+
+      // Load saved settings first
+      loadSettings();
+
+      const params = new URLSearchParams(window.location.search);
+
+      // Handle cache clear
+      if (params.has('clearcache') || params.has('poison')) {
+        clearCache();
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+
+      // Handle custom start date from URL (for shared links)
+      const startParam = params.get('start');
+      if (startParam && startParam.includes('-')) {
+        const [y, m, d] = startParam.split('-').map(Number);
+        ramadanStart = new Date(y, m - 1, d);
+        ramadanEnd = new Date(ramadanStart);
+        ramadanEnd.setDate(ramadanEnd.getDate() + RAMADAN_DAYS - 1);
+      }
+
+      // Handle date param
+      const dateParam = params.get('date');
+      if (dateParam) {
+        let d;
+        if (dateParam.includes('-')) {
+          const [y, m, day] = dateParam.split('-').map(Number);
+          d = new Date(y, m - 1, day);
+        } else {
+          d = new Date(parseInt(dateParam) * 1000);
+        }
+        if (isWithinRamadan(d)) selectedDate = d;
+      }
+
+      if (!selectedDate) {
+        const today = new Date();
+        if (today < ramadanStart) selectedDate = new Date(ramadanStart);
+        else if (today > ramadanEnd) selectedDate = new Date(ramadanEnd);
+        else selectedDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      }
+
+      await getUserLocation();
+      updateUI();
+      await loadPrayerTimes(selectedDate);
+      preloadAllDays();
+
+      // Navigation
+      prevDayBtn.addEventListener('click', () => navigateDay(-1));
+      nextDayBtn.addEventListener('click', () => navigateDay(1));
+
+      // Sharing
+      shareBtn.addEventListener('click', shareDay);
+      monthViewBtn.addEventListener('click', showMonthView);
+      monthShareBtn.addEventListener('click', shareMonthImage);
+      monthPreviewClose.addEventListener('click', closeMonthPreview);
+
+      // Theme
+      themeToggle.addEventListener('click', toggleTheme);
+
+      // Settings
+      settingsToggle.addEventListener('click', openSettingsModal);
+      closeSettings.addEventListener('click', closeSettingsModal);
+      saveSettingsBtn.addEventListener('click', saveSettings);
+      settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) closeSettingsModal();
+      });
+
+      // Install
+      installBtn.addEventListener('click', handleInstall);
+      installDismiss.addEventListener('click', dismissInstallBanner);
+      iosInstallDismiss.addEventListener('click', dismissIosInstallBanner);
+
+      // Show iOS install banner if applicable
+      showIosInstallBanner();
+
+      // Other
+      clearCacheBtn.addEventListener('click', () => {
+        if (confirm('Clear all cached data and service worker?')) clearCache();
+      });
+
+      updateUrlWithDate();
+    }
+
+    init();
+  </script>
+</body>
+</html>
