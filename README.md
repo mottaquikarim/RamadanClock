@@ -171,11 +171,31 @@ RamadanClock/
 └── wrangler.toml           # Cloudflare config
 ```
 
+## About PrayTimes.js
+
+This app uses a modified version of the [PrayTimes](http://praytimes.org/) library for calculating Islamic prayer times based on astronomical formulas.
+
+### History
+
+The original PrayTimes library was written in Python by Saleem Shafi and Hamid Zarrabi-Zadeh at praytimes.org. It was later ported to JavaScript by Hamid Zarrabi-Zadeh. The upstream project appears to be largely abandoned at this point.
+
+### Modifications
+
+The version used in this project includes several fixes and modifications:
+
+1. **Python Scope Bug Fix** — The original Python library had a scope issue that caused incorrect calculations in certain edge cases. This fix was applied in an earlier project ([PrayerApp](https://github.com/mottaquikarim/PrayerApp)) before being ported to JavaScript.
+
+2. **Cloudflare Functions Port** — The library was adapted to work as an ES module for use with Cloudflare Functions, converting the original browser-based global namespace pattern to modern JavaScript exports.
+
+3. **Edge Case Handling** — Added try/catch blocks for edge cases in sun angle calculations that could produce NaN values at extreme latitudes.
+
+The library supports multiple calculation methods used by Islamic organizations worldwide, each with slightly different parameters for Fajr and Isha angles based on regional scholarly consensus.
+
 ## Credits
 
 Built with love by Taq and Julianna.
 
-Prayer times calculated using [PrayTimes.js](http://praytimes.org/) by Hamid Zarrabi-Zadeh.
+Prayer times calculated using a modified version of [PrayTimes.js](http://praytimes.org/) (originally by Hamid Zarrabi-Zadeh).
 
 ## License
 
