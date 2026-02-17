@@ -115,23 +115,18 @@ export async function onRequestGet(context) {
     const maghrib = parseTime12h(times.maghrib);
 
     if (fajr) {
-      // Sehri alarm: 30 min before Fajr
-      let alarmH = fajr.hours;
-      let alarmM = fajr.minutes - 30;
-      if (alarmM < 0) { alarmM += 60; alarmH -= 1; }
-
       events.push([
         'BEGIN:VEVENT',
         `UID:${generateUID('sehri', dateStr)}`,
         `DTSTAMP:${now}`,
-        `DTSTART;TZID=${timezone}:${icalDateTime(y, m, d, alarmH, alarmM)}`,
-        `DTEND;TZID=${timezone}:${icalDateTime(y, m, d, fajr.hours, fajr.minutes)}`,
+        `DTSTART;TZID=${timezone}:${icalDateTime(y, m, d, fajr.hours, fajr.minutes)}`,
+        `DTEND;TZID=${timezone}:${icalDateTime(y, m, d, fajr.hours, fajr.minutes + 30)}`,
         `SUMMARY:Sehri - Day ${dayNum}`,
         `DESCRIPTION:Fajr at ${times.fajr}. Stop eating by Fajr.`,
         'BEGIN:VALARM',
-        'TRIGGER:-PT10M',
+        'TRIGGER:-PT30M',
         'ACTION:DISPLAY',
-        'DESCRIPTION:Sehri ending soon',
+        'DESCRIPTION:Sehri ending soon - 30 minutes until Fajr',
         'END:VALARM',
         'END:VEVENT'
       ].join('\r\n'));
@@ -147,9 +142,9 @@ export async function onRequestGet(context) {
         `SUMMARY:Iftaar - Day ${dayNum}`,
         `DESCRIPTION:Maghrib at ${times.maghrib}. Break your fast!`,
         'BEGIN:VALARM',
-        'TRIGGER:PT0M',
+        'TRIGGER:-PT30M',
         'ACTION:DISPLAY',
-        'DESCRIPTION:Time to break your fast!',
+        'DESCRIPTION:Iftaar in 30 minutes!',
         'END:VALARM',
         'END:VEVENT'
       ].join('\r\n'));
