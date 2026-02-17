@@ -81,9 +81,11 @@
   <script>
     // Inline theme detection to prevent flash
     (function() {
-      const saved = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const theme = saved || (prefersDark ? 'dark' : 'light');
+      try {
+        var saved = localStorage.getItem('theme');
+      } catch(e) {}
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = saved || (prefersDark ? 'dark' : 'light');
       document.documentElement.classList.add(theme);
     })();
   </script>
@@ -1200,7 +1202,7 @@
       const isDark = document.documentElement.classList.contains('dark');
       document.documentElement.classList.toggle('dark', !isDark);
       const newTheme = isDark ? 'light' : 'dark';
-      localStorage.setItem('theme', newTheme);
+      try { localStorage.setItem('theme', newTheme); } catch(e) {}
       updateThemeIcons();
       posthog.capture('theme_toggled', { theme: newTheme });
     }
@@ -1707,12 +1709,12 @@
         ramadanStart = new Date(y, m - 1, d);
         ramadanEnd = new Date(ramadanStart);
         ramadanEnd.setDate(ramadanEnd.getDate() + RAMADAN_DAYS - 1);
-        localStorage.setItem('ramadan-start', newStartStr);
+        try { localStorage.setItem('ramadan-start', newStartStr); } catch(e) {}
       }
 
       if (newMethod && CALC_METHODS.includes(newMethod)) {
         calcMethod = newMethod;
-        localStorage.setItem('calc-method', newMethod);
+        try { localStorage.setItem('calc-method', newMethod); } catch(e) {}
       }
 
       posthog.capture('settings_saved', {
@@ -1722,12 +1724,14 @@
       });
 
       // Clear cache since settings changed
-      const keys = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key?.startsWith('ramadan-clock-v')) keys.push(key);
-      }
-      keys.forEach(k => localStorage.removeItem(k));
+      try {
+        const keys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key?.startsWith('ramadan-clock-v')) keys.push(key);
+        }
+        keys.forEach(k => localStorage.removeItem(k));
+      } catch(e) {}
 
       // Refresh UI
       closeSettingsModal();
@@ -1968,10 +1972,12 @@
       e.preventDefault();
       deferredPrompt = e;
       // Only show if user hasn't dismissed it
-      if (!localStorage.getItem('install-dismissed')) {
-        installBanner.classList.remove('hidden');
-        posthog.capture('install_banner_shown');
-      }
+      try {
+        if (!localStorage.getItem('install-dismissed')) {
+          installBanner.classList.remove('hidden');
+          posthog.capture('install_banner_shown');
+        }
+      } catch(e) {}
     });
 
     window.addEventListener('appinstalled', () => {
@@ -1993,13 +1999,13 @@
 
     function dismissInstallBanner() {
       installBanner.classList.add('hidden');
-      localStorage.setItem('install-dismissed', 'true');
+      try { localStorage.setItem('install-dismissed', 'true'); } catch(e) {}
       posthog.capture('install_banner_dismissed');
     }
 
     function dismissIosInstallBanner() {
       iosInstallBanner.classList.add('hidden');
-      localStorage.setItem('ios-install-dismissed', 'true');
+      try { localStorage.setItem('ios-install-dismissed', 'true'); } catch(e) {}
       posthog.capture('ios_install_banner_dismissed');
     }
 
@@ -2013,10 +2019,12 @@
 
     function showIosInstallBanner() {
       // Show iOS banner if: iOS device, not already installed, not dismissed
-      if (isIos() && !isInStandaloneMode() && !localStorage.getItem('ios-install-dismissed')) {
-        iosInstallBanner.classList.remove('hidden');
-        posthog.capture('ios_install_banner_shown');
-      }
+      try {
+        if (isIos() && !isInStandaloneMode() && !localStorage.getItem('ios-install-dismissed')) {
+          iosInstallBanner.classList.remove('hidden');
+          posthog.capture('ios_install_banner_shown');
+        }
+      } catch(e) {}
     }
 
     // ========== INIT ==========
@@ -2036,17 +2044,19 @@
         localStorageWorks = false;
         lastBuild = BUILD_VERSION; // skip cache-clear if localStorage is broken
       }
-      if (!alreadyReloaded && lastBuild !== BUILD_VERSION) {
+      if (!alreadyReloaded && localStorageWorks && lastBuild !== BUILD_VERSION) {
         console.log(`New build detected: ${lastBuild} -> ${BUILD_VERSION}, clearing caches...`);
         // Clear all localStorage except settings
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key?.startsWith('ramadan-clock-v') || key === 'build-version') {
-            keysToRemove.push(key);
+        try {
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key?.startsWith('ramadan-clock-v') || key === 'build-version') {
+              keysToRemove.push(key);
+            }
           }
-        }
-        keysToRemove.forEach(k => localStorage.removeItem(k));
+          keysToRemove.forEach(k => localStorage.removeItem(k));
+        } catch(e) {}
 
         // Clear service worker caches
         if ('caches' in window) {
@@ -2060,7 +2070,7 @@
           await Promise.all(registrations.map(reg => reg.unregister()));
         }
 
-        localStorage.setItem('build-version', BUILD_VERSION);
+        try { localStorage.setItem('build-version', BUILD_VERSION); } catch(e) {}
         // Reload with flag to prevent infinite loop if localStorage is blocked
         const reloadUrl = new URL(window.location.href);
         reloadUrl.searchParams.set('_r', '1');
