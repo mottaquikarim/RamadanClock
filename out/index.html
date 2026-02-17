@@ -1211,10 +1211,19 @@
     updateThemeIcons();
 
     // ========== SERVICE WORKER ==========
-    if ('serviceWorker' in navigator) {
+    // Skip SW in restricted WebViews (Instagram, Facebook, etc.) where
+    // service workers may register but Cache API is broken, causing
+    // the SW fetch handler to silently swallow requests.
+    const isRestrictedWebView = /Instagram|FBAN|FBAV/i.test(navigator.userAgent);
+    if ('serviceWorker' in navigator && !isRestrictedWebView) {
       navigator.serviceWorker.register('/sw.js')
         .then(reg => console.log('SW registered'))
         .catch(err => console.log('SW registration failed:', err));
+    } else if (isRestrictedWebView && 'serviceWorker' in navigator) {
+      // Unregister any previously installed SW in this WebView
+      navigator.serviceWorker.getRegistrations()
+        .then(regs => regs.forEach(r => r.unregister()))
+        .catch(() => {});
     }
 
     // ========== CACHE FUNCTIONS ==========
@@ -1252,18 +1261,24 @@
 
         // Clear service worker caches
         if ('caches' in window) {
-          const cacheNames = await caches.keys();
-          await Promise.all(cacheNames.map(name => caches.delete(name)));
+          try {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+          } catch(e) {}
         }
 
         // Unregister and re-register service worker
         if ('serviceWorker' in navigator) {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(registrations.map(reg => reg.unregister()));
-          // Re-register after a short delay
-          setTimeout(() => {
-            navigator.serviceWorker.register('/sw.js');
-          }, 100);
+          try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(reg => reg.unregister()));
+          } catch(e) {}
+          // Re-register after a short delay (skip in restricted WebViews)
+          if (!isRestrictedWebView) {
+            setTimeout(() => {
+              navigator.serviceWorker.register('/sw.js');
+            }, 100);
+          }
         }
 
         posthog.capture('cache_cleared');
@@ -2060,14 +2075,18 @@
 
         // Clear service worker caches
         if ('caches' in window) {
-          const cacheNames = await caches.keys();
-          await Promise.all(cacheNames.map(name => caches.delete(name)));
+          try {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+          } catch(e) {}
         }
 
         // Unregister old service workers
         if ('serviceWorker' in navigator) {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(registrations.map(reg => reg.unregister()));
+          try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(reg => reg.unregister()));
+          } catch(e) {}
         }
 
         try { localStorage.setItem('build-version', BUILD_VERSION); } catch(e) {}
