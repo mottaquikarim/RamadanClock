@@ -2022,8 +2022,21 @@
     // ========== INIT ==========
     async function init() {
       // Check if build version changed - auto-clear cache on new deploy
-      const lastBuild = localStorage.getItem('build-version');
-      if (lastBuild !== BUILD_VERSION) {
+      // Guard against infinite reload: skip if we already reloaded once (URL flag)
+      // or if localStorage is unavailable (e.g. Instagram in-app browser)
+      const params = new URLSearchParams(window.location.search);
+      const alreadyReloaded = params.get('_r') === '1';
+      let lastBuild;
+      let localStorageWorks = true;
+      try {
+        lastBuild = localStorage.getItem('build-version');
+        localStorage.setItem('_ls_test', '1');
+        localStorage.removeItem('_ls_test');
+      } catch (e) {
+        localStorageWorks = false;
+        lastBuild = BUILD_VERSION; // skip cache-clear if localStorage is broken
+      }
+      if (!alreadyReloaded && lastBuild !== BUILD_VERSION) {
         console.log(`New build detected: ${lastBuild} -> ${BUILD_VERSION}, clearing caches...`);
         // Clear all localStorage except settings
         const keysToRemove = [];
@@ -2048,15 +2061,21 @@
         }
 
         localStorage.setItem('build-version', BUILD_VERSION);
-        // Reload to get fresh content
-        window.location.reload();
+        // Reload with flag to prevent infinite loop if localStorage is blocked
+        const reloadUrl = new URL(window.location.href);
+        reloadUrl.searchParams.set('_r', '1');
+        window.location.replace(reloadUrl.href);
         return;
+      }
+      // Clean up the reload flag from URL
+      if (alreadyReloaded) {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('_r');
+        window.history.replaceState({}, '', cleanUrl.href);
       }
 
       // Load saved settings first
       loadSettings();
-
-      const params = new URLSearchParams(window.location.search);
 
       // Handle cache clear
       if (params.has('clearcache') || params.has('poison')) {
