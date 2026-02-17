@@ -12,6 +12,8 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS);
+    }).catch(() => {
+      // Cache API may be blocked in restricted WebViews (e.g. Instagram)
     })
   );
   self.skipWaiting();
@@ -26,6 +28,8 @@ self.addEventListener('activate', (event) => {
           .filter((name) => name !== CACHE_NAME)
           .map((name) => caches.delete(name))
       );
+    }).catch(() => {
+      // Cache API may be blocked in restricted WebViews
     })
   );
   self.clients.claim();
@@ -42,14 +46,16 @@ self.addEventListener('fetch', (event) => {
       fetch(request)
         .then((response) => {
           // Cache the fresh response for offline use
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
+          try {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone);
+            }).catch(() => {});
+          } catch(e) {}
           return response;
         })
         .catch(() => {
-          return caches.match(request);
+          return caches.match(request).catch(() => fetch(request));
         })
     );
     return;
@@ -60,14 +66,16 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
+          try {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone);
+            }).catch(() => {});
+          } catch(e) {}
           return response;
         })
         .catch(() => {
-          return caches.match(request);
+          return caches.match(request).catch(() => fetch(request));
         })
     );
     return;
@@ -81,13 +89,17 @@ self.addEventListener('fetch', (event) => {
       }
       return fetch(request).then((response) => {
         if (response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
+          try {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone);
+            }).catch(() => {});
+          } catch(e) {}
         }
         return response;
       });
+    }).catch(() => {
+      return fetch(request);
     })
   );
 });
